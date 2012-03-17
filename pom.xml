@@ -32,18 +32,28 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+
+							<relocations>
+								<relocation>
+									<pattern>jline</pattern>
+									<shadedPattern>com.conga.lib.jline</shadedPattern>
+								</relocation>
+							</relocations>
+
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>${app.main.class}</mainClass>
 									<manifestEntries>
-										<Main-Class>${app.main.class}</Main-Class>
 										<!--
+										<Main-Class>${app.main.class}</Main-Class>
 										<X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
 										<X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
 										-->
 									</manifestEntries>
 								</transformer>
 							</transformers>
+
 						</configuration>
 					</execution>
 				</executions>
