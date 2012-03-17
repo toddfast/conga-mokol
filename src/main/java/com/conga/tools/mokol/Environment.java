@@ -1,0 +1,25 @@
+package com.conga.tools.mokol;
+
+/**
+ *
+ * @author Todd Fast
+ */
+public class Environment {
+
+	/**
+	 * 
+	 * 
+	 */
+	private Environment() {
+		super();
+	}
+
+
+
+
+	////////////////////////////////////////////////////////////////////////////
+	// Fields
+	////////////////////////////////////////////////////////////////////////////
+
+	public static final String ENV_LAST_ERROR="lastError";
+}
