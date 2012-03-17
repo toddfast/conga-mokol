@@ -4,7 +4,7 @@ Mokol
 Mokol is a simple, extensible command-line interface (CLI) platform written in Java, and an ecosystem of plugins that provide commands for a variety of purposes.
 
 ### Purpose & Goals
-Sometimes you need a command-line. Mokol is intended to make writing command-line tools consistent and easy. Mokol's simple plugin architecture lets developers quickly create and deploy new commands quickly.
+Sometimes you need a command-line. Mokol is intended to make writing command-line tools consistent and easy. Mokol's simple plugin architecture lets developers create and deploy new commands quickly.
 
 Mokol evolved from internal command-line tools we were building at Conga. After a point, it made sense to factor out the infrastructure and refactor all the tools as plugins. A further benefit of this approach is that it allows an ecosystem to evolve around our work.
 
@@ -21,8 +21,7 @@ Mokol's philosophy emphasizes simplicity over sheer power (though of course, Mok
 
 ### Features for Mokol plugin developers
 - Simple, lightweight API using Java annotations makes writing commands easy. Really easy.
-- ANSI support allows powerful formatting consistently across platforms
-- 
+- ANSI support allows powerful formatting across platforms
 
 ### Upcoming features
 - More plugins
