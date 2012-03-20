@@ -66,26 +66,6 @@
 	</properties>
 
 	<repositories>
-		<repository>
-			<id>central</id>
-			<name>Maven Central Repo</name>
-			<url>http://repo1.maven.org/maven2</url>
-		</repository>
-	<!--
-	<repository>
-		<id>riptano</id>
-		<name>riptano</name>
-		<url>http://mvn.riptano.com/content/repositories/public</url>
-	</repository>
-	<repository>
-		<id>maven.scale7.org</id>
-		<name>Scale7 Maven Repo</name>
-		<url>https://github.com/s7/mvnrepo/raw/master</url>
-		<snapshots>
-			<enabled>true</enabled>
-		</snapshots>
-	</repository>
-	-->
 	</repositories>
 
 	<dependencies>
