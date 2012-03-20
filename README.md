@@ -23,7 +23,7 @@ Mokol's philosophy emphasizes simplicity and productivity through metadata. Its 
 ### Upcoming features
 - Documentation
 - More plugins
-- Dyamic download and installation of plugins at runtime
+- Dynamic download and installation of plugins at runtime
 - Infrastructure to make writing commands easier and more consistent
 - SecurityManager integration to prevent malicious commands from doing Bad Things
 - Keyring for storing and accessing data and credentials securely
@@ -45,6 +45,10 @@ You can also run Mokol with only the base plugin enabled, which is not particula
 Type 'help' at Mokol's command line to see all available commands:
 
     [mokol] help
+
+### Status
+
+The humble code in these initial checkins is *very* minimal and immature. There are missing annotations, key features haven't been added, packages and access modifiers aren't strictly defined for proper modularity, and a whole bunch of other things that we just haven't gotten around to yet. As we refactor our internal plugins, we will have the freedom and time to make these changes and more. Stay tuned!
 
 ## FAQ
 - Q: Why didn't you use OSGi?
