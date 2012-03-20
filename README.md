@@ -40,6 +40,10 @@ Therefore, to run Mokol with one or more plugins, simply include the plugins' JA
 You can also run Mokol with only the base plugin enabled, which is not particularly useful, but lets you verify your environment:
 
     java -jar conga-mokol-0.1-SNAPSHOT.jar
+    
+To run a command when Mokol starts:
+
+    java -jar -classpath ... -jar conga-moko-0.1-SNAPSHOT.jar <command> <arg1> ... <argN>
 
 ### Available commands
 
