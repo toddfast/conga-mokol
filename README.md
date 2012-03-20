@@ -28,6 +28,7 @@ Mokol's philosophy emphasizes simplicity and productivity through metadata. Its 
 - SecurityManager integration to prevent malicious commands from doing Bad Things
 - Keyring for storing and accessing data and credentials securely
 - Scripting support so that Mokol commands can be easily included in external scripts, and external scripts can be called from Mokol
+- Plugin version conflict resolution
 	
 ## Using Mokol
 
