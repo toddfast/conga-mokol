@@ -46,7 +46,7 @@ Type 'help' at Mokol's command line to see all available commands:
 
     [mokol] help
 
-### Status
+## Status
 
 The humble code in these initial checkins is *very* minimal and immature. There are missing annotations, key features haven't been added, packages and access modifiers aren't strictly defined for proper modularity, and a whole bunch of other things that we just haven't gotten around to yet. As we refactor our internal plugins, we will have the freedom and time to make these changes and more. Stay tuned!
 
