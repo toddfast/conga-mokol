@@ -1,31 +1,32 @@
 package com.conga.tools.mokol.plugin.base;
 
-import com.conga.tools.mokol.Command;
-import com.conga.tools.mokol.Environment;
-import com.conga.tools.mokol.Shell;
+import com.conga.tools.mokol.spi.Command;
 import com.conga.tools.mokol.ShellException;
+import com.conga.tools.mokol.spi.CommandContext;
+import com.conga.tools.mokol.spi.annotation.Help;
 import java.util.List;
 
 /**
+ * Shows the last error caught by the shell
  *
  * @author Todd Fast
  */
+@Help("Show the stack trace of the last error")
 public class ShowLastErrorCommand extends Command {
 
+	/**
+	 *
+	 * 
+	 */
 	@Override
-	public void execute(Shell.CommandContext context, List<String> args)
+	public void execute(CommandContext context, List<String> args)
 			throws ShellException {
 
-		Exception e=context.getShell().getEnvironmentValue(
-			Environment.ENV_LAST_ERROR,Exception.class);
+		Throwable e=context.getShell().getLastError();
 
 		if (e!=null) {
 			e.printStackTrace(context.writer());
 			context.printf("\n");
 		}
-	}
-
-	public String getUsage() {
-		return "Show the stack trace of the last error";
 	}
 }

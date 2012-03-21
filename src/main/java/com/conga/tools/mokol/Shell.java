@@ -1,5 +1,11 @@
 package com.conga.tools.mokol;
 
+import com.conga.tools.mokol.plugin.base.BasePlugin;
+import com.conga.tools.mokol.spi.CommandContext;
+import com.conga.tools.mokol.spi.Plugin;
+import com.conga.tools.mokol.spi.CommandClassFactory;
+import com.conga.tools.mokol.spi.Command;
+import com.conga.tools.mokol.spi.CommandFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,30 +21,15 @@ import jline.console.history.FileHistory;
 import org.fusesource.jansi.Ansi;
 
 /**
- * Command-line interface
+ * Mokol's command-line interface
  *
  * @author Todd Fast
  */
 public class Shell implements Runnable {
 
-//	/**
-//	 * Can't be instantiated
-//	 *
-//	 */
-//	private Shell(Console console) {
-//		super();
-//		if (console==null) {
-//			throw new IllegalArgumentException(
-//				"System console not available");
-//		}
-//
-//		this.console=console;
-//	}
-
-
 	/**
 	 * Can't be instantiated
-	 * 
+	 *
 	 */
 	private Shell(ConsoleReader console) {
 		super();
@@ -55,7 +46,7 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	public PluginManager getPluginManager() {
+	/*pkg*/ PluginManager getPluginManager() {
 		return pluginManager;
 	}
 
@@ -64,7 +55,7 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	public void setPluginManager(PluginManager value) {
+	/*pkg*/ void setPluginManager(PluginManager value) {
 
 		if (pluginManager!=null) {
 			throw new IllegalStateException("The plugin manager has already "+
@@ -86,18 +77,6 @@ public class Shell implements Runnable {
 
 		return result;
 	}
-
-
-//	/**
-//	 *
-//	 *
-//	 */
-//	public void setPromptFormat(String value) {
-//		if (value==null)
-//			promptFormat=DEFAULT_PROMPT_FORMAT;
-//		else
-//			promptFormat=value;
-//	}
 
 
 	/**
@@ -175,7 +154,16 @@ public class Shell implements Runnable {
 	 * Returns an unmodifiable list of the environment objects
 	 *
 	 */
-	public Map<String,Object> getEnvironment() {
+	/*pkg*/ Map<String,Object> getEnvironment() {
+		return Collections.unmodifiableMap(_getEnvironment());
+	}
+
+
+	/**
+	 * Returns an unmodifiable list of the environment objects
+	 *
+	 */
+	private Map<String,Object> _getEnvironment() {
 		return environment;
 	}
 
@@ -184,8 +172,8 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	public <T> T getEnvironmentValue(String name, Class<? extends T> clazz) {
-		return clazz.cast(getEnvironment().get(name));
+	/*pkg*/ <T> T getEnvironmentValue(String name, Class<? extends T> clazz) {
+		return clazz.cast(_getEnvironment().get(name));
 	}
 
 
@@ -220,6 +208,24 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
+	public Throwable getLastError() {
+		return getEnvironmentValue(ENV_LAST_ERROR,Throwable.class);
+	}
+
+
+	/**
+	 *
+	 *
+	 */
+	private void setLastError(Throwable value) {
+		_getEnvironment().put(ENV_LAST_ERROR,value);
+	}
+
+
+	/**
+	 *
+	 *
+	 */
 	public void executeCommand(String[] tokens) {
 		String alias=null;
 		List<String> args=new ArrayList<String>();
@@ -231,14 +237,9 @@ public class Shell implements Runnable {
 				alias=token;
 			else
 				args.add(token);
-
-//				getConsole().printf("echo: %s\n",token);
 		}
 
 		if (alias==null) {
-//			getConsole().printf("Invalid command\n");
-//			alias="help";
-//			args=Collections.emptyList();
 			return;
 		}
 
@@ -264,7 +265,6 @@ public class Shell implements Runnable {
 		// Get the command
 		CommandFactory factory=getCommands().get(alias);
 		if (factory==null) {
-//			getConsole().printf("Unknown command \"%s\"\n",alias);
 			try {
 				getConsole().println(
 					String.format("Unknown command \"%s\"",alias));
@@ -298,19 +298,23 @@ public class Shell implements Runnable {
 
 		// Execute the command
 		try {
-			CommandContext context=new CommandContext(this,alias);
+			CommandContext context=new ShellCommandContext(this,alias);
 
 			Command command=factory.newInstance(context);
 			command.execute(context,args);
 		}
 		catch (Exception e) {
-			getEnvironment().put(Environment.ENV_LAST_ERROR,e);
-//			getConsole().printf("ERROR: %s (Use the \"error\" command "+
-//				"to see a detailed stack trace)\n\n",e.getMessage());
+			setLastError(e);
 			try {
-				getConsole().println(
-					String.format("ERROR: %s (Use the \"error\" command "+
-					"to see a detailed stack trace)\n",e.getMessage()));
+				if (getPluginManager().isPluginEnabled(BasePlugin.class)) {
+					getConsole().println(
+						String.format("ERROR: %s (Use the \"error\" command "+
+						"to see a detailed stack trace)\n",e.getMessage()));
+				}
+				else {
+					// Unceremoniously dump the error to the console
+					e.printStackTrace();
+				}
 			}
 			catch (IOException ex) {
 				ex.printStackTrace();
@@ -329,7 +333,6 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	@Override
 	public void run() {
 
 		synchronized (this) {
@@ -439,7 +442,6 @@ public class Shell implements Runnable {
 
 		String result=String.format(format.toString(),args);
 		if (getConsole().getTerminal().isAnsiSupported()) {
-//			result=new AnsiBuffer().bold(result).getAnsiBuffer();
 			result=Ansi
 				.ansi()
 				.bold()
@@ -451,10 +453,10 @@ public class Shell implements Runnable {
 		return result;
 	}
 
-	
+
 	/**
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	private void invalidPromptFormat(char ch, int position, String prompt) {
 		throw new IllegalArgumentException(
@@ -492,22 +494,53 @@ public class Shell implements Runnable {
 
 		Shell shell=new Shell(console);
 
+		// Header
+		console.println(
+			Ansi.ansi()
+				.format("Hi! I'm ")
+				.bold()
+				.bg(Ansi.Color.YELLOW)
+				.format("m")
+				.bg(Ansi.Color.RED)
+				.format("o")
+				.bg(Ansi.Color.CYAN)
+				.format("k")
+				.bg(Ansi.Color.MAGENTA)
+				.format("o")
+				.bg(Ansi.Color.GREEN)
+				.format("l")
+				.fg(Ansi.Color.DEFAULT)
+				.bg(Ansi.Color.DEFAULT)
+				.boldOff()
+			.toString());
+
 		// Intialize the plugins
 		console.println("Loading plugins...");
 
 		PluginManager pluginManager=new PluginManager(shell);
 		List<Plugin> plugins=pluginManager.discoverPlugins();
+
 		for (Plugin plugin: plugins) {
+			String format="Initializing plugin \"%s\" [%s %s]";
+			if (plugin.getName()==null || plugin.getName().trim().isEmpty()) {
+				format="Initializing plugin [%2$s, %3$s]";
+			}
+
 			shell.getConsole().println(
-				String.format("Initializing plugin \"%s\" (%s)",
-					plugin.getName(),plugin.getVersion()));
+				String.format(format,
+					Ansi.ansi()
+						.bold()
+						.format(plugin.getName())
+						.boldOff()
+						.toString(),
+					plugin.getClass().getName(),
+					plugin.getVersion()));
 
 			try {
 				pluginManager.loadPlugin(plugin);
 			}
 			catch (Exception e) {
-				String message=String.format(
-					"Failed to initialize plugin \"%s\":",plugin.getName());
+				String message=String.format("Plugin failed to intialize:");
 
 				shell.getConsole().println(message);
 				e.printStackTrace();
@@ -515,29 +548,33 @@ public class Shell implements Runnable {
 		}
 
 		if (plugins.size()==0) {
-			console.println("No plugins found.");
+			console.println("Oops, no plugins found. This is gonna be boring.");
 		}
 		else {
-			console.println(String.format("Done loading %d plugins.",
-				plugins.size()));
+			console.println(String.format("I loaded %d plugin%s.",
+				plugins.size(),plugins.size()!=1 ? "s" : ""));
 		}
+
+		console.println();
 
 		shell.setPluginManager(pluginManager);
 
 		// Execute the initial command
 		shell.executeCommand(args);
 
-		// Run the shell on a separate thread
-		Thread thread=new Thread(shell);
-		thread.setDaemon(true);
-		thread.start();
+		if (!shell.isEnded()) {
+			// Run the shell on a separate thread
+			Thread thread=new Thread(shell);
+			thread.setDaemon(true);
+			thread.start();
 
-		try {
-			// Wait until the shell thread exits
-			thread.join();
-		}
-		catch (InterruptedException e) {
-			// Graceful close
+			try {
+				// Wait until the shell thread exits
+				thread.join();
+			}
+			catch (InterruptedException e) {
+				// Graceful close
+			}
 		}
 
 		console.println("Bye.");
@@ -554,13 +591,13 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	public static class CommandContext {
+	private static class ShellCommandContext implements CommandContext {
 
 		/**
 		 *
 		 *
 		 */
-		protected CommandContext(Shell instance, String commandAlias) {
+		protected ShellCommandContext(Shell instance, String commandAlias) {
 			super();
 			this.shell=instance;
 			this.commandAlias=commandAlias;
@@ -570,6 +607,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public Shell getShell() {
 			return shell;
 		}
@@ -586,6 +624,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public String readLine() {
 			try {
 				return shell.getConsole().readLine();
@@ -600,6 +639,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public String readLine(String format, Object... args) {
 			try {
 				return shell.getConsole().readLine(String.format(format,args));
@@ -614,6 +654,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public String readPassword() {
 			try {
 				return shell.getConsole().readLine('*');
@@ -628,6 +669,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public String readPassword(String format, Object... args) {
 			try {
 				return shell.getConsole().readLine(String.format(format,args));
@@ -642,6 +684,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public PrintWriter writer() {
 
 			return writer;
@@ -651,6 +694,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public CommandContext printf(String format, Object... args) {
 			try {
 				shell.getConsole().print(String.format(format,args));
@@ -676,6 +720,7 @@ public class Shell implements Runnable {
 	// Fields
 	////////////////////////////////////////////////////////////////////////////
 
+	private static final String ENV_LAST_ERROR="lastError";
 	private static final String DEFAULT_PROMPT_FORMAT="[mokol] ";
 
 	private Thread interpreterThread;

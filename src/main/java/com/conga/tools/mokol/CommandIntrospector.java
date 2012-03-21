@@ -1,20 +1,27 @@
 package com.conga.tools.mokol;
 
-import com.conga.tools.mokol.Shell.CommandContext;
-import com.conga.tools.mokol.annotation.Help;
-import com.conga.tools.mokol.annotation.Switch;
+import com.conga.tools.mokol.spi.ExampleDescriptor;
+import com.conga.tools.mokol.spi.SwitchDescriptor;
+import com.conga.tools.mokol.spi.Usage;
+import com.conga.tools.mokol.spi.Command;
+import com.conga.tools.mokol.spi.CommandContext;
+import com.conga.tools.mokol.spi.annotation.Example;
+import com.conga.tools.mokol.spi.annotation.Help;
+import com.conga.tools.mokol.spi.annotation.Switch;
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
+ * Introspects commands and returns usage information described by annotations
  *
  * @author Todd Fast
  */
@@ -43,14 +50,14 @@ public class CommandIntrospector {
 
 		// Get the list of superclasses starting with the subclass
 		Class<?> chainClass=commandClass;
-		List<Class<?>> classes=new ArrayList<Class<?>>();
+		List<Class<?>> superclasses=new ArrayList<Class<?>>();
 		do {
-			classes.add(chainClass);
+			superclasses.add(chainClass);
 		}
 		while ((chainClass=chainClass.getSuperclass())!=null);
 
 		// Reverse so that we start with the superclass
-		Collections.reverse(classes);
+		Collections.reverse(superclasses);
 
 		Map<String,SwitchDescriptor> abbreviations=
 			new TreeMap<String,SwitchDescriptor>();
@@ -58,15 +65,25 @@ public class CommandIntrospector {
 			new TreeMap<String,SwitchDescriptor>();
 
 		String commandHelp=null;
+		List<ExampleDescriptor> examples=new ArrayList<ExampleDescriptor>();
 
 		// Get the help for the command
 		Help commandHelpAnnotation=commandClass.getAnnotation(Help.class);
 		if (commandHelpAnnotation!=null) {
 			commandHelp=commandHelpAnnotation.value();
+
+			// Collect the examples
+			if (commandHelpAnnotation.examples()!=null) {
+				for (Example example:
+						Arrays.asList(commandHelpAnnotation.examples())) {
+					examples.add(new IntrospectedExampleDescriptor(
+						example.value(),example.description()));
+				}
+			}
 		}
 
 		// Check that all fields are either static or static final
-		for (Class<?> clazz: classes) {
+		for (Class<?> clazz: superclasses) {
 			Method[] methods=clazz.getDeclaredMethods();
 			for (Method method: methods) {
 				// Ignore fields created by the VM
@@ -223,7 +240,7 @@ public class CommandIntrospector {
 		}
 
 
-		return new IntrospectedUsageDescriptor(commandHelp,
+		return new IntrospectedUsageDescriptor(commandHelp,examples,
 			abbreviations,descriptors);
 
 		// Return the result sorted by abbreviation
@@ -242,6 +259,42 @@ public class CommandIntrospector {
 	////////////////////////////////////////////////////////////////////////////
 	// Inner types
 	////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 *
+	 *
+	 */
+	private static class IntrospectedExampleDescriptor
+			implements ExampleDescriptor {
+
+		/**
+		 *
+		 *
+		 * @param name
+		 * @param abbreviation
+		 * @param method
+		 */
+		private IntrospectedExampleDescriptor(String example,
+				String description) {
+			super();
+			this.example=example;
+			this.description=description;
+		}
+
+		@Override
+		public String getExample() {
+			return example;
+		}
+
+		@Override
+		public String getDescription() {
+			return description;
+		}
+
+		private String example;
+		private String description;
+	}
+
 
 	/**
 	 *
@@ -382,10 +435,12 @@ public class CommandIntrospector {
 		 * @param method
 		 */
 		private IntrospectedUsageDescriptor(String description,
+				List<ExampleDescriptor> examples,
 				Map<String,SwitchDescriptor> switchesByAbbreviation,
 				Map<String,SwitchDescriptor> switchesByName) {
 			super();
 			this.description=description;
+			this.examples=examples;
 			this.switchesByAbbreviation=switchesByAbbreviation;
 			this.switchesByName=switchesByName;
 		}
@@ -398,6 +453,15 @@ public class CommandIntrospector {
 		@Override
 		public String getShortDescription() {
 			return description;
+		}
+
+
+		/**
+		 *
+		 *
+		 */
+		public List<ExampleDescriptor> getExamples() {
+			return examples;
 		}
 
 
@@ -422,6 +486,7 @@ public class CommandIntrospector {
 
 
 		private String description;
+		private List<ExampleDescriptor> examples;
 		private Map<String,SwitchDescriptor> switchesByAbbreviation;
 		private Map<String,SwitchDescriptor> switchesByName;
 	}

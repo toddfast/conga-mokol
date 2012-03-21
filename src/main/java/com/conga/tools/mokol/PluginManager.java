@@ -1,5 +1,6 @@
 package com.conga.tools.mokol;
 
+import com.conga.tools.mokol.spi.Plugin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,12 +12,11 @@ import java.util.ServiceLoader;
  *
  * @author Todd Fast
  */
-public class PluginManager {
+/*pkg*/ class PluginManager {
 
 	/**
-	 * 
-	 * 
-	 * @param shell
+	 *
+	 *
 	 */
 	public PluginManager(Shell shell) {
 		super();
@@ -42,7 +42,7 @@ public class PluginManager {
 
 		try {
 			plugin.initialize(getShell());
-			plugins.put(plugin.getName(),plugin);
+			plugins.put(plugin.getClass(),plugin);
 		}
 		catch (Exception e) {
 			if (e instanceof ShellException) {
@@ -53,6 +53,15 @@ public class PluginManager {
 					"Failed to initialize plugin \"%s\":",plugin.getName()),e);
 			}
 		}
+	}
+
+
+	/**
+	 *
+	 *
+	 */
+	public boolean isPluginEnabled(Class<? extends Plugin> pluginClass) {
+		return plugins.keySet().contains(pluginClass);
 	}
 
 
@@ -130,5 +139,6 @@ public class PluginManager {
 	////////////////////////////////////////////////////////////////////////////
 
 	private Shell shell;
-	private Map<String,Plugin> plugins=new HashMap<String,Plugin>();
+	private Map<Class<? extends Plugin>,Plugin> plugins=
+		new HashMap<Class<? extends Plugin>,Plugin>();
 }
