@@ -1,7 +1,7 @@
 Mokol: =^@.@^=
 =====
 
-Mokol is a simple, extensible command-line interface (CLI) platform written in Java, and an ecosystem of plugins that provide commands for a variety of purposes.
+Mokol is a lightweight, extensible command-line interface (CLI) platform written in Java, and an ecosystem of plugins that provide commands for a variety of purposes.
 
 ## Purpose & Goals
 It's a fact of life: Sometimes you need a command line. And when you do, it's frustating to work with homegrown command-line tools that all have different conventions, dependencies, and error handling.
