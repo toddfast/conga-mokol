@@ -34,18 +34,18 @@ Mokol's philosophy emphasizes simplicity and productivity through metadata. Its 
 
 Mokol is based on a plugin architecture, and all commands available in the CLI are provided by plugins. There are no built-in commands per se. Plugins are packaged as JAR files and discovered from the classpath.
 
-Therefore, to run Mokol with one or more plugins, simply include the plugins' JAR files in the classpath when running Mokol:
+Therefore, to run Mokol with one or more plugins, simply include the plugins' JAR files in the classpath when running Mokol (note that you cannot use the -jar and -classpath directives at the same time, so you should avoid using the -jar directive):
 
-    java -classpath path/to/plugin.jar -jar conga-mokol-0.1-SNAPSHOT.jar
+    java -classpath conga-mokol-0.2-SNAPSHOT.jar;path/to/plugin.jar com.conga.tools.mokol.Shell
+
+To run a command when Mokol starts:
+
+    java -classpath conga-mokol-0.2-SNAPSHOT.jar;path/to/plugin.jar com.conga.tools.mokol.Shell <command> <arg1> ... <argN>
 
 You can also run Mokol with only the base plugin enabled, which is not particularly useful, but lets you verify your environment:
 
-    java -jar conga-mokol-0.1-SNAPSHOT.jar
+    java -classpath conga-mokol-0.2-SNAPSHOT.jar com.conga.tools.mokol.Shell
     
-To run a command when Mokol starts:
-
-    java -jar -classpath <classpath to plugins> -jar conga-mokol-0.1-SNAPSHOT.jar <command> <arg1> ... <argN>
-
 ### Available commands
 
 Type 'help' at Mokol's command line to see all available commands:
@@ -54,7 +54,7 @@ Type 'help' at Mokol's command line to see all available commands:
 
 ## Status
 
-The humble code in these initial checkins is *very* minimal and immature. There are missing annotations, key features haven't been added, packages and access modifiers aren't strictly defined for proper modularity, and a whole bunch of other things that we just haven't gotten around to yet. As we refactor our internal plugins, we will have the freedom and time to make these changes and more. Stay tuned!
+The humble code in these initial checkins is minimal and still maturing. Key features haven't been added, packages and access modifiers aren't fully defined for proper modularity, and a whole bunch of other things that we just haven't gotten around to yet are outstanding. As we refactor our internal plugins, we will have the freedom and time to make these changes and more. Stay tuned!
 
 ## FAQ
 - Q: Why didn't you use OSGi?
