@@ -1,10 +1,7 @@
-package com.conga.tools.mokol;
+package com.conga.tools.mokol.metadata;
 
-import com.conga.tools.mokol.spi.ExampleDescriptor;
-import com.conga.tools.mokol.spi.SwitchDescriptor;
-import com.conga.tools.mokol.spi.Usage;
-import com.conga.tools.mokol.spi.Command;
-import com.conga.tools.mokol.spi.CommandContext;
+import com.conga.tools.mokol.CommandBase;
+import com.conga.tools.mokol.CommandContext;
 import com.conga.tools.mokol.spi.annotation.Example;
 import com.conga.tools.mokol.spi.annotation.Help;
 import com.conga.tools.mokol.spi.annotation.Switch;
@@ -45,7 +42,7 @@ public class CommandIntrospector {
 	 * @throws SwitchDefinitionException
 	 */
 	public static Usage getUsageDescriptor(CommandContext context,
-			Class<? extends Command> commandClass)
+			Class<? extends CommandBase> commandClass)
 			throws SwitchDefinitionException {
 
 		// Get the list of superclasses starting with the subclass

@@ -1,8 +1,10 @@
-package com.conga.tools.mokol.spi;
+package com.conga.tools.mokol;
 
+import com.conga.tools.mokol.metadata.CommandIntrospector;
+import com.conga.tools.mokol.metadata.SwitchDescriptor;
+import com.conga.tools.mokol.metadata.Usage;
+import com.conga.tools.mokol.spi.Plugin;
 import com.conga.tools.mokol.util.TypeConverter;
-import com.conga.tools.mokol.CommandIntrospector;
-import com.conga.tools.mokol.ShellException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,21 +12,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A command that uses metadata in annotations to generate usage information,
- * as well as set argument values on the command instance prior to execution in
- * {@link #doExecute}
- *
+ * 
+ * 
  * @author Todd Fast
  */
-public abstract class AnnotatedCommand extends Command {
+public abstract class CommandBase {
 
 	/**
 	 * Introspects the current command instance for switch metadata and sets
 	 * switch values on corresponding mutator methods before calling
-	 * {@link #doExecute} to execute the command proper.
+	 * {@link #execute} to execute the command proper.
 	 *
 	 */
-	public final void execute(CommandContext context,
+	/*pkg*/ final void _execute(CommandContext context,
 			List<String> switchesAndArgs)
 			throws ShellException {
 
@@ -120,7 +120,7 @@ public abstract class AnnotatedCommand extends Command {
 		}
 
 		// Now execute the command
-		doExecute(context,reducedArgs);
+		execute(context,reducedArgs);
 	}
 
 
@@ -131,24 +131,38 @@ public abstract class AnnotatedCommand extends Command {
 	 * @param context
 	 * @param args
 	 */
-	protected abstract void doExecute(CommandContext context,
-		List<String> args)
+	protected abstract void execute(CommandContext context, List<String> args)
 		throws ShellException;
 
 
 	/**
-	 * Returns usage information introspected from the annotations on
-	 * this class
+	 *
 	 *
 	 */
-	@Override
-	public final Usage getUsage(CommandContext context) {
-		if (usageDescriptor==null) {
-			usageDescriptor=
-				CommandIntrospector.getUsageDescriptor(context,this.getClass());
+	protected final Plugin getPlugin(CommandContext context) {
+		Plugin plugin=context.getShell().getPlugin(context.getCommandAlias());
+
+		assert plugin!=null:
+			"Alias \""+context.getCommandAlias()+"\" should have been "+
+			"associated with a plugin";
+
+		return plugin;
+	}
+
+
+	/**
+	 * Returns the usage information for this command. Note, a command will
+	 * be instantiated and then discarded to provide this information.
+	 *
+	 *
+	 */
+	public Usage getUsage(CommandContext context) {
+		if (usage==null) {
+			usage=CommandIntrospector.getUsageDescriptor(
+				context,this.getClass());
 		}
 
-		return usageDescriptor;
+		return usage;
 	}
 
 
@@ -158,5 +172,5 @@ public abstract class AnnotatedCommand extends Command {
 	// Fields
 	////////////////////////////////////////////////////////////////////////////
 
-	private	Usage usageDescriptor;
+	private Usage usage;
 }

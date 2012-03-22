@@ -1,16 +1,22 @@
 package com.conga.tools.mokol.plugin.base;
 
-import com.conga.tools.mokol.spi.CommandClassFactory;
-import com.conga.tools.mokol.spi.Plugin;
-import com.conga.tools.mokol.Shell;
-import com.conga.tools.mokol.ShellException;
+import com.conga.tools.mokol.spi.annotation.Plugin;
+import com.conga.tools.mokol.spi.annotation.Command;
 
 /**
- * Initializes the basic commands
+ * Initializes the base commands
  *
  * @author Todd Fast
  */
-public class BasePlugin implements Plugin {
+@Plugin(
+	commands={
+		@Command(alias="about", command=AboutCommand.class),
+		@Command(alias="exit", command=ExitCommand.class),
+		@Command(alias="quit", command=ExitCommand.class),
+		@Command(alias="help", command=HelpCommand.class),
+		@Command(alias="error", command=ShowLastErrorCommand.class)
+	})
+public class BasePlugin extends com.conga.tools.mokol.spi.Plugin {
 
 	/**
 	 *
@@ -29,20 +35,5 @@ public class BasePlugin implements Plugin {
 	@Override
 	public String getVersion() {
 		return getClass().getPackage().getImplementationVersion();
-	}
-
-
-	/**
-	 *
-	 *
-	 */
-	@Override
-	public void initialize(Shell shell) throws ShellException {
-		shell.aliasCommand("about",new CommandClassFactory(AboutCommand.class));
-		shell.aliasCommand("exit",new CommandClassFactory(ExitCommand.class));
-		shell.aliasCommand("quit",new CommandClassFactory(ExitCommand.class));
-		shell.aliasCommand("help",new CommandClassFactory(HelpCommand.class));
-		shell.aliasCommand("error",new CommandClassFactory(
-			ShowLastErrorCommand.class));
 	}
 }

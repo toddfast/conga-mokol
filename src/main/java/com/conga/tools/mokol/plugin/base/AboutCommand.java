@@ -3,7 +3,7 @@ package com.conga.tools.mokol.plugin.base;
 import com.conga.tools.mokol.Shell;
 import com.conga.tools.mokol.spi.Command;
 import com.conga.tools.mokol.ShellException;
-import com.conga.tools.mokol.spi.CommandContext;
+import com.conga.tools.mokol.CommandContext;
 import com.conga.tools.mokol.spi.annotation.Help;
 import java.util.List;
 import org.fusesource.jansi.Ansi;

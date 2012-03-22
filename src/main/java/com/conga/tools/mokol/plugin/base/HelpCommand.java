@@ -1,12 +1,12 @@
 package com.conga.tools.mokol.plugin.base;
 
 import com.conga.tools.mokol.spi.Command;
-import com.conga.tools.mokol.spi.CommandFactory;
+import com.conga.tools.mokol.CommandFactory;
 import com.conga.tools.mokol.ShellException;
-import com.conga.tools.mokol.spi.CommandContext;
-import com.conga.tools.mokol.spi.ExampleDescriptor;
-import com.conga.tools.mokol.spi.SwitchDescriptor;
-import com.conga.tools.mokol.spi.Usage;
+import com.conga.tools.mokol.CommandContext;
+import com.conga.tools.mokol.metadata.ExampleDescriptor;
+import com.conga.tools.mokol.metadata.SwitchDescriptor;
+import com.conga.tools.mokol.metadata.Usage;
 import com.conga.tools.mokol.spi.annotation.Example;
 import com.conga.tools.mokol.spi.annotation.Help;
 import com.conga.tools.mokol.util.StringUtil;
@@ -23,8 +23,8 @@ import org.fusesource.jansi.Ansi;
 @Help(
 	value="Show help for one or all commands",
 	examples={
-		@Example(value="help",description="Show help for all commands"),
-		@Example(value="help <command>",description="Show help for the "+
+		@Example(value="",description="Show help for all commands"),
+		@Example(value="<command>",description="Show help for the "+
 			"specified command")
 	})
 public class HelpCommand extends Command {
@@ -161,15 +161,20 @@ public class HelpCommand extends Command {
 		}
 
 		if (!usage.getExamples().isEmpty()) {
-			context.printf("\n %20sExamples:\n"," ");
+//			context.printf("\n %20sExamples:\n"," ");
 
 			for (ExampleDescriptor example: usage.getExamples()) {
-				context.printf("\n %20s%s:\n"," ",example.getDescription());
+
+				String description=example.getDescription();
+				if (description==null || description.trim().isEmpty())
+					description="Usage";
+
+				context.printf("\n %20s%s:\n"," ",description);
 				context.printf("\n %20s  %s\n"," ",
 					Ansi.ansi()
 						.fg(Ansi.Color.DEFAULT)
 						.bold()
-						.format(example.getExample())
+						.format(alias+" "+example.getExample())
 						.boldOff()
 						.fg(Ansi.Color.DEFAULT)
 					);

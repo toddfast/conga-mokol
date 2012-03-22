@@ -19,6 +19,24 @@ public class StringUtil {
     }
 
 
+	/**
+	 *
+	 *
+	 */
+	public static String repeat(String value, int num) {
+		if (value==null || value.trim().isEmpty()) {
+			throw new IllegalArgumentException("Parameter \"value\" "+
+				"cannot be null or an empty string");
+		}
+
+		StringBuilder result=new StringBuilder(num*value.length());
+		for (int i=0; i<num; i++)
+			result.append(value);
+
+		return result.toString();
+	}
+
+
     /**
 	 *
 	 * 

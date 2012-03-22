@@ -1,5 +1,6 @@
 package com.conga.tools.mokol;
 
+import com.conga.tools.mokol.metadata.CommandDescriptor;
 import com.conga.tools.mokol.spi.Plugin;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ import java.util.ServiceLoader;
 		super();
 		this.shell=shell;
 	}
-
+ 
 
 	/**
 	 *
@@ -41,7 +42,17 @@ import java.util.ServiceLoader;
 			throws ShellException {
 
 		try {
-			plugin.initialize(getShell());
+			Map<String,CommandDescriptor> descriptors=
+				((PluginBase)plugin)._initialize(getShell());
+
+			// Alias all the commands
+			// TODO: Check for conflicting aliases and give a chance to re-alias
+			for (Map.Entry<String,CommandDescriptor> entry: 
+					descriptors.entrySet()) {
+				getShell().aliasCommand(entry.getValue().getAlias(),
+					plugin,entry.getValue().getFactory());
+			}
+
 			plugins.put(plugin.getClass(),plugin);
 		}
 		catch (Exception e) {

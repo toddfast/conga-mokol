@@ -1,11 +1,8 @@
 package com.conga.tools.mokol;
 
 import com.conga.tools.mokol.plugin.base.BasePlugin;
-import com.conga.tools.mokol.spi.CommandContext;
 import com.conga.tools.mokol.spi.Plugin;
-import com.conga.tools.mokol.spi.CommandClassFactory;
 import com.conga.tools.mokol.spi.Command;
-import com.conga.tools.mokol.spi.CommandFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -114,14 +111,15 @@ public class Shell implements Runnable {
 	 * Add an alias for a command
 	 *
 	 */
-	public void aliasCommand(String alias, Class<? extends Command> command) {
+	/*pkg*/ void aliasCommand(String alias, Plugin plugin,
+			Class<? extends Command> command) {
 
 		if (command==null) {
 			throw new IllegalArgumentException(
 				"Parameter \"command\" cannot be null");
 		}
 
-		aliasCommand(alias,new CommandClassFactory(command));
+		aliasCommand(alias,plugin,new CommandClassFactory(command));
 	}
 
 
@@ -129,7 +127,13 @@ public class Shell implements Runnable {
 	 * Add an alias for a command
 	 *
 	 */
-	public void aliasCommand(String alias, CommandFactory factory) {
+	/*pkg*/ void aliasCommand(String alias, Plugin plugin,
+			CommandFactory factory) {
+
+		if (plugin==null) {
+			throw new IllegalArgumentException(
+				"Parameter \"plugin\" cannot be null");
+		}
 
 		if (alias==null || alias.trim().isEmpty()) {
 			throw new IllegalArgumentException(
@@ -147,24 +151,7 @@ public class Shell implements Runnable {
 		}
 
 		commands.put(alias,factory);
-	}
-
-
-	/**
-	 * Returns an unmodifiable list of the environment objects
-	 *
-	 */
-	/*pkg*/ Map<String,Object> getEnvironment() {
-		return Collections.unmodifiableMap(_getEnvironment());
-	}
-
-
-	/**
-	 * Returns an unmodifiable list of the environment objects
-	 *
-	 */
-	private Map<String,Object> _getEnvironment() {
-		return environment;
+		commandInfos.put(alias,new CommandInfo(plugin,factory));
 	}
 
 
@@ -172,8 +159,26 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
-	/*pkg*/ <T> T getEnvironmentValue(String name, Class<? extends T> clazz) {
-		return clazz.cast(_getEnvironment().get(name));
+	/*pkg*/ Plugin getPlugin(String alias) {
+		return commandInfos.get(alias).getPlugin();
+	}
+
+
+	/**
+	 * 
+	 *
+	 */
+	public Environment getEnvironment() {
+		return globalEnvironment;
+	}
+
+
+	/**
+	 *
+	 *
+	 */
+	public Environment getPrivateEnvironment() {
+		return privateEnvironment;
 	}
 
 
@@ -209,7 +214,7 @@ public class Shell implements Runnable {
 	 *
 	 */
 	public Throwable getLastError() {
-		return getEnvironmentValue(ENV_LAST_ERROR,Throwable.class);
+		return getPrivateEnvironment().get(ENV_LAST_ERROR,Throwable.class);
 	}
 
 
@@ -218,7 +223,7 @@ public class Shell implements Runnable {
 	 *
 	 */
 	private void setLastError(Throwable value) {
-		_getEnvironment().put(ENV_LAST_ERROR,value);
+		getPrivateEnvironment().put(ENV_LAST_ERROR,value);
 	}
 
 
@@ -301,23 +306,30 @@ public class Shell implements Runnable {
 			CommandContext context=new ShellCommandContext(this,alias);
 
 			Command command=factory.newInstance(context);
-			command.execute(context,args);
+			((CommandBase)command)._execute(context,args);
 		}
 		catch (Exception e) {
 			setLastError(e);
 			try {
 				if (getPluginManager().isPluginEnabled(BasePlugin.class)) {
+
+					String message=e.getMessage();
+					if (message==null || message.trim().isEmpty())
+						message=e.getClass().getName();
+
 					getConsole().println(
 						String.format("ERROR: %s (Use the \"error\" command "+
-						"to see a detailed stack trace)\n",e.getMessage()));
+						"to see a detailed stack trace)\n",message));
 				}
 				else {
 					// Unceremoniously dump the error to the console
-					e.printStackTrace();
+					e.printStackTrace(new PrintWriter(
+						getConsole().getOutput()));
 				}
 			}
 			catch (IOException ex) {
-				ex.printStackTrace();
+				ex.printStackTrace(new PrintWriter(
+					getConsole().getOutput()));
 			}
 		}
 	}
@@ -433,11 +445,9 @@ public class Shell implements Runnable {
 
 		// Take the list of params and map their values to the format string
 		// using values from the environment
-		Map<String,Object> env=getEnvironment();
-
 		Object[] args=new Object[params.size()];
 		for (int i=0; i<params.size(); i++) {
-			args[i]=env.get(params.get(i));
+			args[i]=getEnvironment().get(params.get(i),String.class);
 		}
 
 		String result=String.format(format.toString(),args);
@@ -520,13 +530,16 @@ public class Shell implements Runnable {
 		PluginManager pluginManager=new PluginManager(shell);
 		List<Plugin> plugins=pluginManager.discoverPlugins();
 
+		int successCount=0;
+		int failCount=0;
 		for (Plugin plugin: plugins) {
-			String format="Initializing plugin \"%s\" [%s %s]";
+			String format="Initializing plugin \"%s\" [%s %s]...";
 			if (plugin.getName()==null || plugin.getName().trim().isEmpty()) {
-				format="Initializing plugin [%2$s, %3$s]";
+				format="Initializing plugin [%2$s, %3$s]...";
 			}
 
-			shell.getConsole().println(
+			// Print initialization header
+			shell.getConsole().print(
 				String.format(format,
 					Ansi.ansi()
 						.bold()
@@ -537,22 +550,52 @@ public class Shell implements Runnable {
 					plugin.getVersion()));
 
 			try {
+				// Load the plugin
 				pluginManager.loadPlugin(plugin);
+
+				successCount++;
+				shell.getConsole().println(
+					Ansi.ansi()
+						.fg(Ansi.Color.GREEN)
+						.format("ok")
+						.fg(Ansi.Color.DEFAULT)
+						.toString());
 			}
-			catch (Exception e) {
-				String message=String.format("Plugin failed to intialize:");
+			catch (Throwable e) {
+				// Failed
+				failCount++;
+				shell.getConsole().println(
+					Ansi.ansi()
+						.fg(Ansi.Color.RED)
+						.format("fail")
+						.fg(Ansi.Color.DEFAULT)
+						.toString());
+
+				String message=
+					Ansi.ansi()
+						.fg(Ansi.Color.RED)
+						.format("Plugin failed to intialize:")
+						.fg(Ansi.Color.DEFAULT)
+						.toString();
 
 				shell.getConsole().println(message);
-				e.printStackTrace();
+				e.printStackTrace(new PrintWriter(
+					shell.getConsole().getOutput()));
 			}
 		}
 
 		if (plugins.size()==0) {
 			console.println("Oops, no plugins found. This is gonna be boring.");
 		}
+		else
+		if (failCount==0) {
+			console.println("All plugins loaded successfully.");
+		}
 		else {
-			console.println(String.format("I loaded %d plugin%s.",
-				plugins.size(),plugins.size()!=1 ? "s" : ""));
+			console.println(String.format(
+				"%d plugin%s loaded successfully. %d plugins failed.",
+				successCount,(successCount!=1 ? "s" : ""),
+				failCount,(failCount!=1 ? "s" : "")));
 		}
 
 		console.println();
@@ -591,6 +634,38 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
+	private class CommandInfo {
+		public CommandInfo(Plugin plugin, CommandFactory factory) {
+			super();
+			this.plugin=plugin;
+			this.factory=factory;
+		}
+
+		/**
+		 *
+		 *
+		 */
+		public Plugin getPlugin() {
+			return plugin;
+		}
+
+		/**
+		 *
+		 *
+		 */
+		public CommandFactory getFactory() {
+			return factory;
+		}
+
+		private Plugin plugin;
+		private CommandFactory factory;
+	}
+
+
+	/**
+	 *
+	 *
+	 */
 	private static class ShellCommandContext implements CommandContext {
 
 		/**
@@ -616,6 +691,7 @@ public class Shell implements Runnable {
 		 *
 		 *
 		 */
+		@Override
 		public String getCommandAlias() {
 			return commandAlias;
 		}
@@ -731,6 +807,9 @@ public class Shell implements Runnable {
 	private Map<String,CommandFactory> commands=
 		Collections.synchronizedMap(
 			new TreeMap<String,CommandFactory>());
-	private Map<String,Object> environment=Collections.synchronizedMap(
-		new TreeMap<String,Object>());
+	private Map<String,CommandInfo> commandInfos=
+		Collections.synchronizedMap(
+			new TreeMap<String,CommandInfo>());
+	private Environment globalEnvironment=new Environment(this);
+	private Environment privateEnvironment=new Environment(this);
 }

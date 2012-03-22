@@ -1,6 +1,7 @@
 package com.conga.tools.mokol.spi;
 
-import com.conga.tools.mokol.CommandIntrospector;
+import com.conga.tools.mokol.CommandContext;
+import com.conga.tools.mokol.CommandBase;
 import com.conga.tools.mokol.ShellException;
 import java.util.List;
 
@@ -9,50 +10,14 @@ import java.util.List;
  *
  * @author Todd Fast
  */
-public abstract class Command
+public abstract class Command extends CommandBase
 {
 	/**
 	 * The primary command entry point. Command authors should implement this
 	 * method to perform whatever work the command is designed to do.
 	 *
-	 *
 	 */
-	public abstract void execute(CommandContext context,
+	protected abstract void execute(CommandContext context,
 		List<String> args)
 		throws ShellException;
-
-
-//	/**
-//	 *
-//	 *
-//	 */
-//	protected void wrongNumberOfParameters(int min, int max, int actual) {
-//		throw new IllegalArgumentException("Wrong number of parameters (min="+
-//			min+", max="+max+", actual="+actual+")");
-//	}
-
-
-	/**
-	 * Returns the usage information for this command. Note, a command will
-	 * be instantiated and then discarded to provide this information.
-	 *
-	 *
-	 */
-	public Usage getUsage(CommandContext context) {
-		if (usage==null) {
-			usage=CommandIntrospector.getUsageDescriptor(
-				context,this.getClass());
-		}
-
-		return usage;
-	}
-
-
-
-
-	////////////////////////////////////////////////////////////////////////////
-	// Fields
-	////////////////////////////////////////////////////////////////////////////
-
-	private Usage usage;
 }
