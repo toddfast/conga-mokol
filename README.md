@@ -29,6 +29,7 @@ Mokol's philosophy emphasizes simplicity and productivity through metadata. Its 
 - Keyring for storing and accessing data and credentials securely
 - Scripting support so that Mokol commands can be easily included in external scripts, and external scripts can be called from Mokol
 - Plugin version conflict resolution
+- Distributed scripting
 	
 ## Using Mokol
 
