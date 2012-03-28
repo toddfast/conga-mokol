@@ -13,8 +13,14 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
+
 import jline.console.ConsoleReader;
+import jline.console.completer.Completer;
+import jline.console.completer.StringsCompleter;
 import jline.console.history.FileHistory;
+
+import org.apache.commons.lang3.StringUtils;
 import org.fusesource.jansi.Ansi;
 
 /**
@@ -270,9 +276,20 @@ public class Shell implements Runnable {
 		// Get the command
 		CommandFactory factory=getCommands().get(alias);
 		if (factory==null) {
+			StringBuffer options = new StringBuffer("");
+			for (String option : new TreeSet<String>(getCommands().keySet())) {
+				if (StringUtils.getLevenshteinDistance(option, alias)==1) {
+					options.append('\t').append(option).append('\n');
+				}
+			}
 			try {
-				getConsole().println(
-					String.format("Unknown command \"%s\"",alias));
+				if (options.length()>0) {
+					getConsole().println(
+							String.format("Did you mean one of these? \n%s",options.toString()));
+				} else {
+					getConsole().println(
+						String.format("Unknown command \"%s\"",alias));
+				}
 			}
 			catch (IOException e) {
 				e.printStackTrace();
@@ -356,7 +373,7 @@ public class Shell implements Runnable {
 
 			interpreterThread=Thread.currentThread();
 		}
-
+		getConsole().addCompleter(new StringsCompleter(getCommands().keySet()));
 		// Interpret commands
 		String line;
 		try {
