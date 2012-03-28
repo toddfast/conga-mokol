@@ -16,7 +16,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import jline.console.ConsoleReader;
-import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 import jline.console.history.FileHistory;
 
@@ -276,17 +275,23 @@ public class Shell implements Runnable {
 		// Get the command
 		CommandFactory factory=getCommands().get(alias);
 		if (factory==null) {
-			StringBuffer options = new StringBuffer("");
-			for (String option : new TreeSet<String>(getCommands().keySet())) {
-				if (StringUtils.getLevenshteinDistance(option, alias)==1) {
-					options.append('\t').append(option).append('\n');
+			StringBuffer potentialAliases = new StringBuffer("");
+			for (String potentialAlias:
+					new TreeSet<String>(getCommands().keySet())) {
+				if (StringUtils.getLevenshteinDistance(
+						potentialAlias,alias)==1) {
+					potentialAliases.append('\t')
+						.append(potentialAlias)
+						.append('\n');
 				}
 			}
 			try {
-				if (options.length()>0) {
+				if (potentialAliases.length()>0) {
 					getConsole().println(
-							String.format("Did you mean one of these? \n%s",options.toString()));
-				} else {
+						String.format("Did you mean one of these? \n%s",
+						potentialAliases.toString()));
+				}
+				else {
 					getConsole().println(
 						String.format("Unknown command \"%s\"",alias));
 				}
@@ -373,7 +378,13 @@ public class Shell implements Runnable {
 
 			interpreterThread=Thread.currentThread();
 		}
-		getConsole().addCompleter(new StringsCompleter(getCommands().keySet()));
+
+		// Complete the list of commands
+		// TODO: We will want to allow each command to specify a completer
+		// when it has been identified on the command line
+		getConsole().addCompleter(
+			new StringsCompleter(getCommands().keySet()));
+
 		// Interpret commands
 		String line;
 		try {
