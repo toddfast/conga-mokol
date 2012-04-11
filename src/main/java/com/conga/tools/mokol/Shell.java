@@ -367,6 +367,7 @@ public class Shell implements Runnable {
 	 *
 	 *
 	 */
+	@Override
 	public void run() {
 
 		synchronized (this) {
@@ -612,7 +613,7 @@ public class Shell implements Runnable {
 			}
 		}
 
-		if (plugins.size()==0) {
+		if (plugins.isEmpty()) {
 			console.println("Oops, no plugins found. This is gonna be boring.");
 		}
 		else
